@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sys_script">
+    <sys_script action="INSERT_OR_UPDATE">
+        <abort_action>false</abort_action>
+        <access>package_private</access>
+        <action_delete>false</action_delete>
+        <action_insert>true</action_insert>
+        <action_query>false</action_query>
+        <action_update>true</action_update>
+        <active>true</active>
+        <add_message>true</add_message>
+        <advanced>true</advanced>
+        <change_fields>false</change_fields>
+        <client_callable>false</client_callable>
+        <collection>x_303259_docrav2_initial_requests</collection>
+        <condition/>
+        <description/>
+        <execute_function>false</execute_function>
+        <filter_condition/>
+        <is_rest>false</is_rest>
+        <message><![CDATA[<p>Script is being run</p>]]></message>
+        <name>RestTest</name>
+        <order>100</order>
+        <priority>100</priority>
+        <rest_method/>
+        <rest_method_text/>
+        <rest_service/>
+        <rest_service_text/>
+        <rest_variables/>
+        <role_conditions/>
+        <script><![CDATA[(function executeRule(current, previous /*null when async*/) {		
+		
+	var target = new GlideRecord('sys_attachment'); // Querry Table for Attachments	
+	target.addQuery('table_name', 'x_303259_docrav2_initial_requests');	
+	target.addQuery('table_sys_id', current.sys_id);	
+	target.query();	
+		
+	while(target.next()) { //loop Thru Results	
+	  var sa = new GlideSysAttachment(); 	
+	  var base64Data = sa.getContentBase64(target); //gs.info("Base64 of Content : " + base64Data);		 	
+	  var requestAttachment = new sn_ws.RESTMessageV2(); 	//Send Attachments
+	  requestAttachment.setEndpoint('https://api.ocr.space/parse/image');	
+	  requestAttachment.setHttpMethod('POST');	
+     // requestAttachment.waitForResponse(120);
+      requestAttachment.setRequestHeader("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW");		
+		
+	  requestAttachment.setRequestBody("------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"base64image\"\r\n\r\ndata:application/pdf;base64," + base64Data + "\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"isOverlayRequired\"\r\n\r\ntrue\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"iscreatesearchablepdf\"\r\n\r\nfalse\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"issearchablepdfhidetextlayer\"\r\n\r\nfalse\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"filetype\"\r\n\r\napplication/pdf\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"apikey\"\r\n\r\nc2e469bf8288957\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--");	
+	  	
+	 //gs.info(requestAttachment.getRequestBody());	
+	 // Execute API Request
+	var responseAttachment = requestAttachment.execute();	
+	
+	gs.info("Response :" + responseAttachment.getBody());	 // Debug: 
+	//Convert Json Sring in to a String for write to Table	
+	var jr = JSON.stringify(responseAttachment.getBody());
+	gs.info("JR :" + jr);
+	//Create and write string to Table	 	
+	var gr = new GlideRecord('x_303259_docrav2_initial_requests');
+	gr.get(current.sys_id); //gs.info(current.sys_id); Debug	
+	gr.u_original_response = jr;
+	gr.u_file_name = target.file_name;
+	gr.update();
+		
+		gs.info("JR :" + jr);
+		gs.info("Response Code :" + responseAttachment.getStatusCode());	
+	}	
+		
+})(current, previous);		
+]]></script>
+        <sys_class_name>sys_script</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2019-01-16 19:35:01</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>b0b159a5db8363001d869006db96198c</sys_id>
+        <sys_mod_count>84</sys_mod_count>
+        <sys_name>RestTest</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="DOCRAv2" source="x_303259_docrav2">bb2493a3db3223001d869006db96199b</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="DOCRAv2">bb2493a3db3223001d869006db96199b</sys_scope>
+        <sys_update_name>sys_script_b0b159a5db8363001d869006db96198c</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2019-01-22 01:02:05</sys_updated_on>
+        <template/>
+        <when>async</when>
+    </sys_script>
+    <sys_translated_text action="delete_multiple" query="documentkey=b0b159a5db8363001d869006db96198c"/>
+</record_update>

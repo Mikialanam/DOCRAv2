@@ -16,52 +16,59 @@
         <hint/>
         <isolate_script>false</isolate_script>
         <list_action>true</list_action>
-        <list_banner_button>false</list_banner_button>
+        <list_banner_button>true</list_banner_button>
         <list_button>true</list_button>
         <list_choice>false</list_choice>
-        <list_context_menu>false</list_context_menu>
+        <list_context_menu>true</list_context_menu>
         <list_link>false</list_link>
         <list_save_with_form_button>false</list_save_with_form_button>
         <list_style/>
         <name>TestUIAction</name>
         <onclick/>
         <order>100</order>
-        <script><![CDATA[//Create New Querry to Find Attachment
-var sa = newGlideRecord('sys_attachment'); 
-sa.addQuery('table_name','initial requests');
-sa.addQuery('sys_id',current.sys_id);
-sa.addQuery();
+        <script><![CDATA[(function executeRule(current, previous /*null when async*/) {
 
-var b64attachment = '';
+//Get Attachment
+var target = new GlideRecord('sys_attachment');
+target.addQuery('table_name', 'x_303259_docrav2_initial_requests');
+target.addQuery('table_sys_id', current.sys_id);
+target.query();
+/*while(target.next()) {
+	gs.info("Sys_id : " + target.table_sys_id + "  File Name : " + target.file_name);
+}*/
+	
+while(target.next()) {
+  var sa = new GlideSysAttachment();
+  var binData = sa.getBytes(target);
+  var base64Data = GlideStringUtil.base64Encode(binData);
+	gs.info(base64Data);
 
-if( sa.next() ) {
-	var attachmentIS = new GlideSysAttachmentInputStream(sa.sys_id);
-	var bytearrayOS = new Packages.java.io.ByteArrayOutputStream();
-	
-	//Write byte stream
-	attachmentIS.writeTo(bytearrayOS);
-	//encode attachment file
-	b64attachment = GlideBase64.encode(bytearrayOS,toByteArray());
-	
-	//Create REST Request
-	var request = new sn_ws.RESTMessageV2();
-	request.setHttpMethod('post');
-	request.setEndpoint("https://api.ocr.space/parse/image");
+  //Send Attachments
+  var requestAttachment = new sn_ws.RESTMessageV2();
+  requestAttachment.setEndpoint('https://api.ocr.space/parse/image');
+  requestAttachment.setHttpMethod('POST');
 
-	var body = ("apikey", "c2e469bf8288957");
-	body.append("language", "eng");
-	body.append("isOverlayRequired", "true");
-	body.append("filetype", "application/pdf");
-	body.append("base64image", "data:application/pdf;base64" + b64attachment );
-	gs.print(body);
-	
-	request.setRequestBody(body);
-	
-var response = request.execute();
-var httpResponseStatus = response.getStatusCode();
-gs.print("response is" + response);
+//  requestAttachment.setBasicAuth(user,password);
+//  requestAttachment.setRequestHeader("Accept","application/json");
+//  requestAttachment.setRequestHeader('Content-Type','application/json');
+//  var requestAttachmentJSONBody = createRequestBody("u_name", target.file_name + ":" + target.content_type);
+
+  var body = createRequestBody("apikey", "c2e469bf8288957");
+  body += addToRequestBody("language", "eng");
+  body += addToRequestBody("isOverlayRequired", "true");
+  body += addToRequestBody("filetype", "application/pdf");
+  body += addToRequestBody("base64image", "data:application/pdf;base64" + b64attachment );
+  body += closeRequestBody();
+  
+  gs.info(body);
+
+  requestAttachment.setRequestBody(body);
+
+  var responseAttachment = requestAttachment.execute();
+gs.info(requestAttachment);
 }
-]]></script>
+
+})(current, previous);]]></script>
         <show_insert>true</show_insert>
         <show_multiple_update>false</show_multiple_update>
         <show_query>false</show_query>
@@ -72,7 +79,7 @@ gs.print("response is" + response);
         <sys_domain>global</sys_domain>
         <sys_domain_path>/</sys_domain_path>
         <sys_id>36c79d15db4b23001d869006db961943</sys_id>
-        <sys_mod_count>10</sys_mod_count>
+        <sys_mod_count>26</sys_mod_count>
         <sys_name>TestUIAction</sys_name>
         <sys_overrides/>
         <sys_package display_value="DOCRAv2" source="x_303259_docrav2">bb2493a3db3223001d869006db96199b</sys_package>
@@ -80,7 +87,7 @@ gs.print("response is" + response);
         <sys_scope display_value="DOCRAv2">bb2493a3db3223001d869006db96199b</sys_scope>
         <sys_update_name>sys_ui_action_36c79d15db4b23001d869006db961943</sys_update_name>
         <sys_updated_by>admin</sys_updated_by>
-        <sys_updated_on>2019-01-16 03:21:52</sys_updated_on>
+        <sys_updated_on>2019-01-17 05:52:04</sys_updated_on>
         <table>x_303259_docrav2_initial_requests</table>
         <ui11_compatible>true</ui11_compatible>
         <ui16_compatible>false</ui16_compatible>
